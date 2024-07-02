@@ -62,9 +62,22 @@ pub fn derive(input: TokenStream) -> TokenStream {
             }
         }
     }).collect::<Vec<_>>();
+    let build_func = value.iter().map(|(ident, _ty)| {
+        let err_info = format!("{} is none", ident);
+        quote! {
+            #ident: self.#ident.context(#err_info)?
+        }
+    }).collect::<Vec<_>>();
     let impl_builder = quote! {
         impl #builder_name {
             #(#builder_field)*
+            pub fn build(self) -> Result<Command> {
+                Ok(
+                    #struct_name {
+                        #(#build_func),*
+                    }
+                )
+            }
         }
     };
 
