@@ -54,9 +54,24 @@ pub fn derive(input: TokenStream) -> TokenStream {
     };
     println!("struct_builder: {}", struct_builder);
 
+    let builder_field = value.iter().map(|(ident, ty)| {
+        quote! {
+            fn #ident(&mut self, #ident: #ty) -> &mut Self {
+                self.#ident = Some(#ident);
+                self
+            }
+        }
+    }).collect::<Vec<_>>();
+    let impl_builder = quote! {
+        impl #builder_name {
+            #(#builder_field)*
+        }
+    };
+
     let output = quote! {
         #struct_builder
         #impl_struct
+        #impl_builder
     };
     println!("output: {}", output);
     TokenStream::from(output)
